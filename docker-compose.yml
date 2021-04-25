@@ -1,0 +1,44 @@
+# Java API Docker
+
+version: '3.4'
+services:
+  solr:
+    image: solr
+    container_name: solr
+    networks:
+      - backend
+    ports:
+      - '8983:8983/tcp'
+  java_api:
+    container_name: java_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+ #   volumes:
+ #     - ./:/home/app/
+    networks:
+      - backend
+    # command: >
+    #    /bin/bash -c "
+    #    cd usr/src/app/target 
+    #    myrep/mvn-builder package -T 1C -o -Dmaven.test.skip=true
+    #    "
+    ports:
+      - '8080:8080/tcp'
+    volumes:
+      - ./:/app
+    links:
+      - solr
+    depends_on:
+      - 'solr'
+    environment:
+      - MY_ENV_VAL=development
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://java_api:8080']
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+networks:
+  backend:
